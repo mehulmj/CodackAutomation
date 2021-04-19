@@ -1,23 +1,28 @@
 import logo from './logo.svg';
 import './App.css';
-
+import Dashboard from './Dashboard.js';
+import Login from './Login.js'
+import HomePage from './HomePage.js';
+import SignUp from './SignUp.js';
+import ForgotPassword from './ForgotPassword.js';
+import WebServer from './WebServer.js';
+import Docker from './Docker.js';
+import { Route,BrowserRouter, Switch } from 'react-router-dom';
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className>
+        <BrowserRouter>
+        <Switch>
+          <Route exact path={"/"} component={HomePage} />
+          <Route exact path={"/Dashboard"} component={Dashboard} />
+          <Route exact path ={"/Login"} component={Login} />
+          <Route exact path ={"/SignUp"} component={SignUp} />
+          <Route exact path ={"/ForgotPassword"} component={ForgotPassword} />
+          <Route exact path ={"/WebServer"} component={WebServer} />
+          <Route exact path ={"/Docker"} component={Docker} />
+
+        </Switch>
+        </BrowserRouter>
     </div>
   );
 }
