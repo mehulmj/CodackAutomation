@@ -7,6 +7,9 @@ import SignUp from './SignUp.js';
 import ForgotPassword from './ForgotPassword.js';
 import WebServer from './WebServer.js';
 import Docker from './Docker.js';
+import Operations from './Operations.js';
+import Cookies from './Cookies.js';
+
 import { Route,BrowserRouter, Switch } from 'react-router-dom';
 function App() {
   return (
@@ -20,6 +23,8 @@ function App() {
           <Route exact path ={"/ForgotPassword"} component={ForgotPassword} />
           <Route exact path ={"/WebServer"} component={WebServer} />
           <Route exact path ={"/Docker"} component={Docker} />
+          <Route exact path ={"/Operations"} component={Operations} />
+          <Route exact path ={"/Cookies"} component={Cookies} />
 
         </Switch>
         </BrowserRouter>
