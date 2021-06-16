@@ -28,6 +28,9 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import TextField from '@material-ui/core/TextField';
 import EditAttributesRoundedIcon from '@material-ui/icons/EditAttributesRounded';
+import PowerSettingsNewIcon from '@material-ui/icons/PowerSettingsNew';
+import DoneAllIcon from '@material-ui/icons/DoneAll';
+import GetAppIcon from '@material-ui/icons/GetApp';
 import {
     Card,
     CardMedia,
@@ -54,100 +57,92 @@ import MuiAlert from '@material-ui/lab/Alert';
 function Alert(props) {
     return <MuiAlert elevation={6} variant="filled" {...props}/>;
 }
-class WebServerOperation extends React.Component {
+class OsOperations extends React.Component {
     constructor(props)
     {
         super(props);
-        this.state={
-            openDelete:false,
-            openEdit:false,
-            portNumber: 80,
-            changedPortNumber: null,
-            webServerStatus : false,
-            openPortNumberChange:false,
-            snackBarMessage:"",
-            openSnackBar:false,
-            openBackdrop:false,
-            alertType:"error"
+        this.state = {
+            openDelete: false,
+            openEdit: false,
+            softwareName: "",
+            softwareNameText:"",
+            webServerStatus: false,
+            openPortNumberChange: false,
+            snackBarMessage: "",
+            openSnackBar: false,
+            openBackdrop: false,
+            alertType: "error",
+            isCheckSoftware : false,
+            softwareExists: false
         };
         this.deleteFile = this
             .deleteFile
             .bind(this);
-        this.fileUpload=this.fileUpload.bind(this);
-        this.alertDeleteFile=this.alertDeleteFile.bind(this);
-        this.alertEditFile=this.alertEditFile.bind(this);
-        this.editFile=this.editFile.bind(this);
-        this.handlePortNumberChange=this.handlePortNumberChange.bind(this);
-        this.alertPortNumberChange=this.alertPortNumberChange.bind(this);
-        this.handlePortButton=this.handlePortButton.bind(this);
-        this.handleStopResumeButton=this.handleStopResumeButton.bind(this);
-        this.handleRebootButton=this.handleRebootButton.bind(this);
+        this.fileUpload = this
+            .fileUpload
+            .bind(this);
+        this.alertDeleteFile = this
+            .alertDeleteFile
+            .bind(this);
+        this.alertEditFile = this
+            .alertEditFile
+            .bind(this);
+        this.editFile = this
+            .editFile
+            .bind(this);
+        this.handleSoftwareNameChange = this
+            .handleSoftwareNameChange
+            .bind(this);
+       
+        this.handleSoftwareNameButton = this
+            .handleSoftwareNameButton
+            .bind(this);
+        this.handleInstallButton = this
+            .handleInstallButton
+            .bind(this);
+            this.handleUninstallButton = this
+            .handleUninstallButton
+            .bind(this);
+        this.handleRebootButton = this
+            .handleRebootButton
+            .bind(this);
     }
     handleRebootButton()
     {
-        this.setState({openBackdrop:true, webServerStatus:false});
-        var status= !this.state.webServerStatus;
+        this.setState({openBackdrop: true, webServerStatus: false});
+        var status = !this.state.webServerStatus;
         var message = "Succesfully rebooted the server";
-        setTimeout(()=>{this.setState({openBackdrop:false, webServerStatus: true,openSnackBar:true,alertType:"success",snackBarMessage:message})},900)
+        setTimeout(() => {
+            this.setState({openBackdrop: false, webServerStatus: true, openSnackBar: true, alertType: "success", snackBarMessage: message})
+        }, 900)
     }
-    handleStopResumeButton()
+    handleInstallButton()
     {
-        this.setState({openBackdrop:true});
-        var status= !this.state.webServerStatus;
-        if(status == true)
-        {
-            var message = "Succesfully started the server";
-        }
-        else
-        {
-            var message = "Succesfully stopped the server"
-        }
-        setTimeout(()=>{this.setState({openBackdrop:false, webServerStatus: status,openSnackBar:true,alertType:"success",snackBarMessage:message})},1000)
+        this.setState({openBackdrop: true});
+        var message = "Succesfully installed " + this.state.softwareName;
+        setTimeout(() => {
+            this.setState({openBackdrop: false, softwareExists: true,openSnackBar: true, alertType: "success", snackBarMessage: message})
+        }, 1000)
     }
-    handlePortButton()
+    handleUninstallButton()
     {
-        if(this.state.changedPortNumber==null)
-        {
-            this.setState({openSnackBar:true, alertType:"error", snackBarMessage:"Please Enter a valid port number"})
-            return(<div></div>);
-        }
-        else if(this.state.portNumber == this.state.changedPortNumber)
-        {
-            this.setState({openSnackBar:true,alertType:"error", snackBarMessage:"Port Number is the same as the current one, choose a different port number"})
-        }
-        else
-        this.setState({openPortNumberChange:true});
+        this.setState({openBackdrop: true});
+        var message = "Succesfully uninstalled " + this.state.softwareName;
+        setTimeout(() => {
+            this.setState({openBackdrop: false, softwareExists: false,openSnackBar: true, alertType: "success", snackBarMessage: message})
+        }, 1000)
     }
-    alertPortNumberChange()
+    handleSoftwareNameButton()
     {
-       
-        const handleClose = () => {
-            this.setState({openPortNumberChange:false});
-          };
-         return(
-            <Dialog
-            open={this.state.openPortNumberChange}
-            onClose={handleClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title"><span style={{color:"red"}}>{"Are you sure you want to change the port number?"}</span></DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                This would change the port number from {this.state.portNumber} to {this.state.changedPortNumber}
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} color="primary">
-                Disagree
-              </Button>
-              <Button onClick={handleClose} color="primary" autoFocus>
-                Agree
-              </Button>
-            </DialogActions>
-          </Dialog>
-         );
-    }
+        if (this.state.softwareNameText == "") {
+            this.setState({openSnackBar: true, alertType: "error", snackBarMessage: "Please enter the name of the software"})
+        }  else 
+            {
+            var softwareName=this.state.softwareNameText
+            this.setState({softwareName:softwareName,isCheckSoftware: true, softwareExists: false});
+            }
+        }
+   
     fileUpload(event)
     {
         console.log(event)
@@ -156,85 +151,91 @@ class WebServerOperation extends React.Component {
     {
         var fileName = event.target.id || event.target.value;
         console.log(fileName);
-        this.setState({openDelete:true});
+        this.setState({openDelete: true});
     }
 
     editFile(event)
     {
         var fileName = event.target.id || event.target.value;
         console.log(fileName);
-        this.setState({openEdit:true});
+        this.setState({openEdit: true});
     }
     alertEditFile()
     {
-        
-          const handleClose = () => {
-            this.setState({openEdit:false});
-          };
-          
-          return (
-              <div>
-              <Dialog open={this.state.openEdit} onClose={handleClose} aria-labelledby="form-dialog-title">
-                <DialogTitle id="form-dialog-title"><span style={{color:"green"}}>Rename File</span></DialogTitle>
-                <DialogContent>
-                  <DialogContentText>
-                    Enter the new file name
-                  </DialogContentText>
-                  <TextField
-                    autoFocus
-                    margin="dense"
-                    id="name"
-                    label="Rename"
-                    fullWidth
-                  />
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={handleClose} color="primary">
-                    Cancel
-                  </Button>
-                  <Button onClick={handleClose} color="primary">
-                    Rename
-                  </Button>
-                </DialogActions>
-              </Dialog>
-              </div>);
+
+        const handleClose = () => {
+            this.setState({openEdit: false});
+        };
+
+        return (
+            <div>
+                <Dialog
+                    open={this.state.openEdit}
+                    onClose={handleClose}
+                    aria-labelledby="form-dialog-title">
+                    <DialogTitle id="form-dialog-title">
+                        <span
+                            style={{
+                            color: "green"
+                        }}>Rename File</span>
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Enter the new file name
+                        </DialogContentText>
+                        <TextField autoFocus margin="dense" id="name" label="Rename" fullWidth/>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={handleClose} color="primary">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleClose} color="primary">
+                            Rename
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+            </div>
+        );
     }
     alertDeleteFile()
     {
-        
-          const handleClose = () => {
-            this.setState({openDelete:false});
-          };
-         return(
+
+        const handleClose = () => {
+            this.setState({openDelete: false});
+        };
+        return (
             <Dialog
-            open={this.state.openDelete}
-            onClose={handleClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title"><span style={{color:"red"}}>{"Are you sure you want to delete this file?"}</span></DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                This action would delete the file permanently and might not be recoverable!
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} color="primary">
-                Disagree
-              </Button>
-              <Button onClick={handleClose} color="primary" autoFocus>
-                Agree
-              </Button>
-            </DialogActions>
-          </Dialog>
-         );
+                open={this.state.openDelete}
+                onClose={handleClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description">
+                <DialogTitle id="alert-dialog-title">
+                    <span style={{
+                        color: "red"
+                    }}>{"Are you sure you want to delete this file?"}</span>
+                </DialogTitle>
+                <DialogContent>
+                    <DialogContentText id="alert-dialog-description">
+                        This action would delete the file permanently and might not be recoverable!
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose} color="primary">
+                        Disagree
+                    </Button>
+                    <Button onClick={handleClose} color="primary" autoFocus>
+                        Agree
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        );
     }
-    handlePortNumberChange(event)
+    handleSoftwareNameChange(event)
     {
         console.log(event);
-        this.setState({changedPortNumber: event.target.value});
+        this.setState({softwareNameText: event.target.value});
     }
-    
+
     render()
     {
         const list_of_files = [
@@ -248,30 +249,59 @@ class WebServerOperation extends React.Component {
         ];
         const handleClose = (event, reason) => {
             if (reason === 'clickaway') {
-              return;
+                return;
             }
-        
-            this.setState({openSnackBar:false});
-          };
+
+            this.setState({openSnackBar: false});
+        };
         return (
             <div>
                 {this.alertDeleteFile()}
                 {this.alertEditFile()}
-                {this.alertPortNumberChange()}
                 <div>
-                    <Snackbar open={this.state.openSnackBar} autoHideDuration={4000} onClose={handleClose}>
+                    <Snackbar
+                        open={this.state.openSnackBar}
+                        autoHideDuration={4000}
+                        onClose={handleClose}>
                         <Alert onClose={handleClose} severity={this.state.alertType}>
                             {this.state.snackBarMessage}
                         </Alert>
                     </Snackbar>
+                    <Backdrop
+                        style={{
+                        zIndex: "1000"
+                    }}
+                        open={this.state.openBackdrop}>
+                        <CircularProgress color="blue"/>
+                    </Backdrop>
                 </div>
-               
+
+                <br/>
+                <Button
+                    variant="contained"
+                    style={{
+                    height: "6vh",
+                    width: "12vw",
+                    backgroundColor: "#8B0000",
+                    color: "white",
+                    marginLeft: "85%"
+                }}
+                    onClick={this.handleStopResumeButton}>
+                    <h3>
+                        <b>SHUT DOWN</b>
+                    </h3>
+                    {"  "}
+                    <PowerSettingsNewIcon/>
+                </Button>
                 <br/>
                 <br/>
                 <Grid container spacing={1}>
                     <Grid item sm={6}>
-                        <Card style={{backgroundColor:"#FAF0E6"}}>
-                        <CardMedia
+                        <Card
+                            style={{
+                            backgroundColor: "#FAF0E6"
+                        }}>
+                            <CardMedia
                                 style={{
                                 width: "100%",
                                 height: "9.5vh"
@@ -282,79 +312,95 @@ class WebServerOperation extends React.Component {
                                     fontSize: "2.5vw",
                                     fontWeight: "bolder",
                                     textAlign: "center"
-                                }}>STATUS</h1>
+                                }}>SOFTWARES</h1>
                             </CardMedia>
                             <Divider/>
                             <CardContent>
-                            <Backdrop style={{zIndex:"1000"}} open={this.state.openBackdrop}>
-                                <CircularProgress color="blue" />
-                            </Backdrop>
-                                Server is currently : {(this.state.webServerStatus === true &&
-                                     <div style={{display:"inline"}}><b style={{color:"green"}}> ACTIVE</b><br/><br/>
-                                     <Button
-                                        variant="contained"
-                                        style={{
-                                        height:"6vh",
-                                        backgroundColor: "red",
-                                        color: "white"
-                                    }}
-                                    onClick={this.handleStopResumeButton}>
-                                        <h3>
-                                            <b>stop</b>
-                                        </h3>
-                                            <StopIcon/>
-                                    </Button> 
-                                    {"    "}      
+                               <div>
+                                    <h3>Check whether a software is installed on your system</h3>
+                                    <br/>
+                                    <TextField
+                                    id="outlined-basic"
+                                    value={this.state.softwareNameText}
+                                    onChange={this.handleSoftwareNameChange}
+                                    label="Name Of The Software"
+                                    type="text"
+                                    variant="filled"
+                                    color="secondary"
+                                    style={{
+                                    backgroundColor: "white"
+                                }}/>
+                                <br/> <br/>
+                                
+                                <Button
+                                    variant="contained"
+                                    style={{
+                                    height: "6vh",
+                                    backgroundColor: "#48a093 ",
+                                    color: "white"
+                                }}
+                                    onClick={this.handleSoftwareNameButton}>
+                                    <h3>
+                                        <b>CHECK</b>
+                                    </h3>
+                                    <DoneAllIcon/>
+                                </Button>
+                                { this.state.isCheckSoftware == true && this.state.softwareExists == false
+                                    && <div><h3>{this.state.softwareName} {" "} is not installed in your system</h3>
+                                    <br/>
                                     <Button
-                                        variant="contained"
-                                        style={{
-                                        height:"6vh",
-                                        backgroundColor: "grey",
-                                        color: "white"
-                                    }}
-                                    onClick={this.handleRebootButton}>
-                                        <h3>
-                                            <b>reboot</b>
-                                        </h3>
-                                            <CachedIcon/>
-                                    </Button> </div>) || (this.state.webServerStatus == false && <div style={{display:"inline"}}><b style={{color:"red"}}> INACTIVE</b><br/><br/>
-                                     <Button
                                         variant="contained"
                                         style={{
                                         height:"6vh",
                                         backgroundColor: "green",
                                         color: "white"
                                     }}
-                                    onClick={this.handleStopResumeButton}>
+                                    onClick={this.handleInstallButton}>
                                         <h3>
-                                            <b>resume</b>
+                                            <b>INSTALL</b>
                                         </h3>
-                                            <PlayArrowIcon/>
-                                    </Button>    </div>) 
+                                            <GetAppIcon/>
+                                    </Button> 
+                                    </div>
                                 }
-                            <div style={{display:"inline"}}> 
-                                    
+                                  { this.state.isCheckSoftware == true && this.state.softwareExists == true
+                                    && <div><h3>{this.state.softwareName} {" "} is  installed in your system</h3>
+                                    <br/>
                                     <Button
                                         variant="contained"
                                         style={{
                                         height:"6vh",
-                                        backgroundColor: "#8B0000",
+                                        backgroundColor: "red",
                                         color: "white"
-                                    }}>
+                                    }}
+                                    onClick={this.handleUninstallButton}>
                                         <h3>
-                                            <b>delete</b>
+                                            <b>UNINSTALL</b>
                                         </h3>
                                             <DeleteIcon/>
-                                    </Button>
-                            </div>
+                                    </Button> 
+                                    </div>
+                                }
+                                </div>
                             </CardContent>
-                        </Card>
+                        </Card> 
                     </Grid>
-                <Grid item sm={6}>
-                        <Card style={{backgroundColor:"#FFE4B5"}}>
+                    <Grid item sm={6}>
+                        <Card
+                            style={{
+                            backgroundColor: "#FFE4B5"
+                        }}>
                             <CardContent>
-                                <span style={{color:"#2E8B57"}}><h3> Your current <u>port number</u> is : {this.state.portNumber}</h3></span>
-                               <TextField
+                                <span
+                                    style={{
+                                    color: "#2E8B57"
+                                }}>
+                                    <h3>
+                                        Your current
+                                        <u>port number</u>
+                                        is : {this.state.portNumber}</h3>
+                                </span>
+                                <TextField
                                     id="outlined-basic"
                                     value={this.state.value}
                                     onChange={this.handlePortNumberChange}
@@ -362,22 +408,24 @@ class WebServerOperation extends React.Component {
                                     type="number"
                                     variant="filled"
                                     color="secondary"
-                                    style={{backgroundColor:"white"}}
+                                    style={{
+                                    backgroundColor: "white"
+                                }}
                                     placeholder={this.state.portNumber}/>
-                                    <br/><br/>  
-                                 <Button
-                                        variant="contained"
-                                        style={{
-                                        height:"6vh",
-                                        backgroundColor: "#4169E1",
-                                        color: "white",
-                                    }}
-                                        onClick={this.handlePortButton}>
-                                        <h3>
-                                            <b>Change</b>
-                                        </h3>
-                                            <EditAttributesRoundedIcon/>
-                                    </Button>    
+                                <br/><br/>
+                                <Button
+                                    variant="contained"
+                                    style={{
+                                    height: "6vh",
+                                    backgroundColor: "#4169E1",
+                                    color: "white"
+                                }}
+                                    onClick={this.handlePortButton}>
+                                    <h3>
+                                        <b>Change</b>
+                                    </h3>
+                                    <EditAttributesRoundedIcon/>
+                                </Button>
                             </CardContent>
                         </Card>
                     </Grid>
@@ -416,7 +464,10 @@ class WebServerOperation extends React.Component {
                                         }}>
                                             <TableRow>
                                                 <TableCell align="left">
-                                                    <h4 style={{color:"white"}}>FILE NAME</h4>
+                                                    <h4
+                                                        style={{
+                                                        color: "white"
+                                                    }}>FILE NAME</h4>
                                                 </TableCell>
                                                 <TableCell align="right"/>
                                             </TableRow>
@@ -464,23 +515,26 @@ class WebServerOperation extends React.Component {
                                     id="contained-button-file"
                                     multiple
                                     onChange={this.fileUpload}
-                                    type="file" style={{display: "none"}}/>
-                                    <Button
-                                        variant="contained"
-                                        style={{
-                                        marginLeft: "22%",
-                                        width: "50%",
-                                        backgroundColor: "#f2d5a9",
-                                        color: "#444d56"
-                                    }}
+                                    type="file"
+                                    style={{
+                                    display: "none"
+                                }}/>
+                                <Button
+                                    variant="contained"
+                                    style={{
+                                    marginLeft: "22%",
+                                    width: "50%",
+                                    backgroundColor: "#f2d5a9",
+                                    color: "#444d56"
+                                }}
                                     onClick={() => this.refs.fileInput.click()}>
-                                        <h3>
-                                            <b>ADD A FILE</b>
-                                        </h3>
-                                        <IconButton aria-label="User" color="inherit">
-                                            <AddCircleIcon/>
-                                        </IconButton>
-                                    </Button>
+                                    <h3>
+                                        <b>ADD A FILE</b>
+                                    </h3>
+                                    <IconButton aria-label="User" color="inherit">
+                                        <AddCircleIcon/>
+                                    </IconButton>
+                                </Button>
                             </CardContent>
                         </Card>
                     </Grid>
@@ -516,7 +570,10 @@ class WebServerOperation extends React.Component {
                                         }}>
                                             <TableRow>
                                                 <TableCell align="left">
-                                                    <h4 style={{color:"white"}}>FILE NAME</h4>
+                                                    <h4
+                                                        style={{
+                                                        color: "white"
+                                                    }}>FILE NAME</h4>
                                                 </TableCell>
                                                 <TableCell align="right"/>
                                             </TableRow>
@@ -564,23 +621,26 @@ class WebServerOperation extends React.Component {
                                     id="contained-button-file"
                                     multiple
                                     onChange={this.fileUpload}
-                                    type="file" style={{display: "none"}}/>
-                                    <Button
-                                        variant="contained"
-                                        style={{
-                                        marginLeft: "22%",
-                                        width: "50%",
-                                        backgroundColor: "#f2d5a9",
-                                        color: "#444d56"
-                                    }}
+                                    type="file"
+                                    style={{
+                                    display: "none"
+                                }}/>
+                                <Button
+                                    variant="contained"
+                                    style={{
+                                    marginLeft: "22%",
+                                    width: "50%",
+                                    backgroundColor: "#f2d5a9",
+                                    color: "#444d56"
+                                }}
                                     onClick={() => this.refs.fileInput.click()}>
-                                        <h3>
-                                            <b>ADD A FILE</b>
-                                        </h3>
-                                        <IconButton aria-label="User" color="inherit">
-                                            <AddCircleIcon/>
-                                        </IconButton>
-                                    </Button>
+                                    <h3>
+                                        <b>ADD A FILE</b>
+                                    </h3>
+                                    <IconButton aria-label="User" color="inherit">
+                                        <AddCircleIcon/>
+                                    </IconButton>
+                                </Button>
                             </CardContent>
                         </Card>
                     </Grid>
@@ -589,4 +649,4 @@ class WebServerOperation extends React.Component {
         );
     }
 }
-export default WebServerOperation;
+export default OsOperations;

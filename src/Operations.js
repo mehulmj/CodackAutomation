@@ -19,8 +19,11 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import WebServerOperation from "./WebServerOperation.js";
-import {Card, CardMedia, CardContent} from "@material-ui/core";
+import OsOperations from "./OsOperations.js";
+import {Card, CardMedia, CardContent,CardActionArea,CardActions} from "@material-ui/core";
 import Header from './Header.js';
+import Typography from '@material-ui/core/Typography'
+import {BrowserRouter as Router, Switch, Route, Link} from "react-router-dom";
 
 ReactFC.fcRoot(FusionCharts, Charts, FusionTheme);
 
@@ -42,16 +45,154 @@ class Operations extends React.Component
 
     render()
     {
-        console.log(this.props);
-        return (
-            <div>
-                <Header currentPage={"Operation"}/>
+        const {operationFor} = this.props.location;
+        console.log(this.props)
+        if (!operationFor) {
+            return (
+                <div>
+                    <Header currentPage="Operation"/>
+                    <br/>
+                    <br/>
+                    <Grid container spacing={9} justify="center">
+                        <Grid item>
+                            <Card
+                                style={{
+                                maxWidth: "400px"
+                            }}>
+                                <CardActionArea>
+                                    <CardMedia
+                                        image="apache.png"
+                                        style={{
+                                        width: "100%",
+                                        height: "140px"
+                                    }}/>
+                                    <CardContent>
+                                        <Typography gutterBottom variant="h5" component="h2">
+                                            Web Server
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary" component="p">
+                                            A web server is server software, or a system of one or more computers dedicated
+                                            to running this software, that can satisfy client HTTP requests on the public
+                                            World Wide Web or also on private LANs and WANs.
 
-                <br/>
-                    <WebServerOperation/>
-            </div>
-        );
+                                        </Typography>
+                                    </CardContent>
+                                    <CardActions>
+                                        <Link
+                                            to="/WebServer"
+                                            style={{
+                                            textDecoration: "None"
+                                        }}>
+                                            <Button size="small" color="primary">
+                                                Learn More
+                                            </Button>
+                                        </Link>
+                                    </CardActions>
+                                </CardActionArea>
+                            </Card>
+                        </Grid>
+                        <Grid item>
+                            <Card
+                                style={{
+                                maxWidth: "400px",
+                                maxHeight: "400px"
+                            }}>
+                                <CardActionArea>
+                                    <CardMedia
+                                        image="docker.png"
+                                        style={{
+                                        width: "100%",
+                                        height: "140px"
+                                    }}/>
+                                    <CardContent>
+                                        <Typography gutterBottom variant="h5" component="h2">
+                                            Docker
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary" component="p">
+                                            Docker is a set of platform as a service products that use OS-level
+                                            virtualization to deliver software in packages called containers. Containers are
+                                            isolated from one another and bundle their own software, libraries and
+                                            configuration files; they can communicate with each other through well-defined
+                                            channels.
+                                        </Typography>
+                                    </CardContent>
+                                    <CardActions>
+                                        <Link
+                                            to="/Docker"
+                                            style={{
+                                            textDecoration: "None"
+                                        }}>
+                                            <Button size="small" color="primary">
+                                                Learn More
+                                            </Button>
+                                        </Link>
+                                    </CardActions>
+                                </CardActionArea>
+                            </Card>
+                        </Grid>
+                        <Grid item>
+                            <Card
+                                style={{
+                                maxWidth: "400px"
+                            }}>
+                                <CardActionArea>
+                                    <CardMedia
+                                        image="monitor.jpg"
+                                        style={{
+                                        width: "100%",
+                                        height: "140px"
+                                    }}/>
+                                    <CardContent>
+                                        <Typography gutterBottom variant="h5" component="h2">
+                                            Remote Monitoring
+                                        </Typography>
+                                        <Typography variant="body2" color="textSecondary" component="p">
+                                            While working remotely, you need to know whats happening on your system or
+                                            perform some actions on your server, using codack you can get updates, perform
+                                            any required operation and get alerts via mail.
+                                        </Typography>
+                                    </CardContent>
+                                    <CardActions>
+                                        <Link
+                                            to={{
+                                            pathname: "/Operations",
+                                            operationFor: "os"
+                                        }}
+                                            style={{
+                                            textDecoration: "None"
+                                        }}>
+                                            <Button size="small" color="primary">
+                                                Learn More
+                                            </Button>
+                                        </Link>
 
+                                    </CardActions>
+                                </CardActionArea>
+                            </Card>
+                        </Grid>
+
+                    </Grid>
+                </div>
+            );
+        } else {
+            if (operationFor == "webserver") {
+                const {webserverName} = this.props.location;
+                return (
+                    <div>
+                        <Header currentPage="Operation"/>
+                        <WebServerOperation webserverName={webserverName}/>
+                    </div>
+                );
+
+            } else if (operationFor == "os") {
+                return (
+                    <div>
+                        <Header currentPage="Operation"/>
+                        <OsOperations/>
+                    </div>
+                );
+            }
+        }
     }
 }
 

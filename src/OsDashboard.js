@@ -72,10 +72,7 @@ class OsDashboard extends React.Component
                             pathname: "/",
                         }}/>
             );
-        }
-        const handleClose = () => {
-            this.setState({open:false});
-          };
+                    }
         const battery = this.state.battery;
         const storage = this.state.storage;
         const ram = this.state.ram;
@@ -107,11 +104,6 @@ class OsDashboard extends React.Component
                     height: "20px"
                 }}/>
                 <Grid container spacing={4} justify="center">
-                <div>
-                <Backdrop open={this.state.open} onClick={handleClose}>
-                <CircularProgress color="inherit" />
-                </Backdrop>
-                </div>
                     <Grid item sm={6}>
                         <Card
                             style={{
