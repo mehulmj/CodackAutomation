@@ -135,6 +135,7 @@ class Docker extends React.Component
                                     <Link
                                         to={{
                                         pathname: "/Operations",
+                                        operationFor : "docker"
                                     }}
                                         style={{
                                         textDecoration: "None"

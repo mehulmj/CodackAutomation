@@ -77,7 +77,7 @@ class SignUp extends React.Component
             this.setState({signupToken: {"signup":false, "message":"Passwords do not match"},buttonClick:1});
         }
         else{
-        fetch(`http://13.127.65.221:5000/signup?emailId=${this.state.emailId}&password=${this.state.password}&username=${this.state.username}`).then(response => {
+        fetch(`http://13.235.242.126:5000/signup?emailId=${this.state.emailId}&password=${this.state.password}&username=${this.state.username}`).then(response => {
             return response.json()
         }).then(users => {
             this.setState({signupToken: users, buttonClick: 1});

@@ -63,7 +63,7 @@ class Login extends React.Component
         }
         else
         {
-        fetch(`http://13.127.65.221:5000/login?emailId=${this.state.emailId}&password=${this.state.password}`).then(response => {
+        fetch(`http://13.235.242.126:5000/login?emailId=${this.state.emailId}&password=${this.state.password}`).then(response => {
             return response.json()
         }).then(users => {
             this.setState({loginToken: users,buttonClick:1});

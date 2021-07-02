@@ -22,11 +22,11 @@ import {Card, CardMedia, CardContent} from "@material-ui/core";
 import {BrowserRouter as Router, Switch, Redirect, Route, Link} from "react-router-dom";
 import Backdrop from '@material-ui/core/Backdrop';
 import CircularProgress from '@material-ui/core/CircularProgress';
+import RefreshIcon from '@material-ui/icons/Refresh';
 ReactFC.fcRoot(FusionCharts, Charts, FusionTheme);
 
 class Chart extends React.Component {
     render() {
-        console.log(this.props);
         return <ReactFC {...this.props.config}/>;
     }
 }
@@ -36,32 +36,68 @@ class OsDashboard extends React.Component
     {
         super(props);
         this.state = {
-            battery: 90,
-            storage: 100,
-            ram: 5,
+            battery: 0,
+            storage: 0,
+            ram: 0,
+            loginRows:[],
+            processRows:[],
             result:null,
-            open:true
+            open:true,
+            openBackdrop:false
         };
+        this.setdata=this.setdata.bind(this);
     }
 
     loaddata()
-    {fetch('http://192.168.43.172:5000/').then(response => {
+    {
+        this.setState({openBackdrop:true})
+        fetch('http://192.168.43.172:5000/os').then(response => {
         return response.json()
     }).then(users => {
-        this.setState({result: users});
+        this.setState({result: users,openBackdrop:false});
+        this.setdata();
     });
-      
-    }
-    createData(name, from, to, where) {
-        return {name, from, to, where};
-    }
-    render()
+    }   
+    setdata()
     {
+        var result=this.state.result;
+       
+        var rows=[];
+        var login=result["login"]
+        for(var i in result["login"])
+        {
+            rows.push(this.createData(login[i]["FROM"],login[i]["LOGIN@"],login[i]["TTY"],login[i]["USER"]))
+        }
+        var process=[];
+        var resultProcess=result["running_process"]
+        for(var i=1;i<resultProcess.length;i++)
+        {
+            process.push(this.createProcessData(resultProcess[i]["COMMAND"],resultProcess[i]["%CPU"],resultProcess[i]["%MEM"],resultProcess[i]["PID"],resultProcess[i]["RSS"],resultProcess[i]["START"],resultProcess[i]["STAT"],resultProcess[i]["TIME"],resultProcess[i]["TTY"],resultProcess[i]["USER"],resultProcess[i]["VSZ"]))
+        }
+        this.setState({
+            battery : result["battery"],
+            ram: result["ram"],
+            loginRows:rows,
+            processRows:process
+        }) 
+        
+    }
+    createProcessData(command,cpu,mem,pid,rss,start,stat,time,tty,user,vsz)
+    {
+        return {cpu,mem,pid,command,rss,start,stat,time,tty,user,vsz};
+    }
+    createData(from, time, tty, user) {
+        return {from, time, tty, user};
+    }
+    componentDidMount()
+    {
+        this.loaddata();
+    }
+    render(){
         var cookiesstr = document.cookie;
         var osname = "";
         if (cookiesstr.length > 0) {
             var cookies = cookiesstr.split(";")
-            console.log(cookiesstr)
             osname = cookies[1].split("=")[1]
         }
         else
@@ -79,38 +115,22 @@ class OsDashboard extends React.Component
         const battery = this.state.battery;
         const storage = this.state.storage;
         const ram = this.state.ram;
-        const rows = [
-            this.createData('root', '18:04', '18:30', 'tty1'),
-            this.createData('root', '19:40', '19:50', 'tty1'),
-            this.createData('root', '3:00', '3:50', 'tty2'),
-            this.createData('mehul', '12:00', '12:45', 'tty1'),
-            this.createData('root', '13:00', '13:50', 'tty2')
-        ];
+        const loginRows = this.state.loginRows;
+        const processRows=this.state.processRows;
         return (
             <div>
-                <div
-                    style
-                    ={{
-                    backgroundColor: "#FADA5E",
-                    marginTop: "-20px"
-                }}>
-                    <h1
-                        style={{
-                        color: "White",
-                        textAlign: "center"
-                    }}>
-                        {osname.toUpperCase()} {"  "}
-                        Operating System Statistics</h1>
-                    <Divider/>
-                </div>
+                
                 <div style={{
                     height: "20px"
                 }}/>
+                <Backdrop style={{zIndex:"1000"}}open={this.state.openBackdrop}>
+                    <CircularProgress color="inherit" />
+                </Backdrop>
+                <IconButton style={{marginLeft:"95%"}} onClick={()=>{this.loaddata()}}>
+                    <RefreshIcon/>
+                </IconButton>
                 <Grid container spacing={4} justify="center">
                 <div>
-                <Backdrop open={this.state.open} onClick={handleClose}>
-                <CircularProgress color="inherit" />
-                </Backdrop>
                 </div>
                     <Grid item sm={6}>
                         <Card
@@ -129,7 +149,7 @@ class OsDashboard extends React.Component
                                         config={{
                                         type: 'doughnut2d',
                                         height: 500,
-                                        width: 800,
+                                        width: 600,
                                         dataFormat: 'json',
                                         bgcolor: "#FDF5E6",
                                         dataSource: {
@@ -144,7 +164,7 @@ class OsDashboard extends React.Component
                                                 "showshadow": "1",
                                                 "enablerotation": "1",
                                                 "enablesmartlabel": "1",
-                                                "centerLabelFontSize": "30",
+                                                "centerLabelFontSize": "20",
                                                 "labelFontSize": "20",
                                                 "captionFontSize": "40",
                                                 "centerLabelBold": "1"
@@ -181,7 +201,7 @@ class OsDashboard extends React.Component
                                 <Chart
                                     config={{
                                     type: 'doughnut2d',
-                                    width: 800,
+                                    width: 600,
                                     height: 500,
                                     dataFormat: 'json',
                                     dataSource: {
@@ -191,7 +211,7 @@ class OsDashboard extends React.Component
                                             "defaultCenterLabel": "Storage",
                                             "centerLabel": "$label: $value",
                                             "decimals": "0",
-                                            "centerLabelFontSize": "28",
+                                            "centerLabelFontSize": "20",
                                             "centerLabelBold": "1",
                                             "labelFontSize": "20",
                                             "captionFontSize": "40",
@@ -232,7 +252,7 @@ class OsDashboard extends React.Component
                                 <Chart
                                     config={{
                                     type: 'doughnut2d',
-                                    width: 800,
+                                    width: 600,
                                     height: 500,
                                     dataFormat: 'json',
                                     dataSource: {
@@ -241,7 +261,7 @@ class OsDashboard extends React.Component
                                             "subCaption": "Your RAM",
                                             "defaultCenterLabel": "RAM",
                                             "centerLabel": "$label: $value",
-                                            "centerLabelFontSize": "30",
+                                            "centerLabelFontSize": "20",
                                             "centerLabelBold": "1",
                                             "labelFontSize": "20",
                                             "captionFontSize": "40",
@@ -308,14 +328,106 @@ class OsDashboard extends React.Component
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {rows.map((row) => (
+                                            {loginRows.map((row) => (
                                                 <TableRow key={row.name}>
                                                     <TableCell component="th" scope="row">
-                                                        {row.name}
+                                                        {row.from}
                                                     </TableCell>
-                                                    <TableCell align="right">{row.from}</TableCell>
-                                                    <TableCell align="right">{row.to}</TableCell>
-                                                    <TableCell align="right">{row.where}</TableCell>
+                                                    <TableCell align="right">{row.time}</TableCell>
+                                                    <TableCell align="right">{row.tty}</TableCell>
+                                                    <TableCell align="right">{row.user}</TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </TableContainer>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                </Grid>
+                <br/>
+                <Grid container>
+                    <Grid item sm={12}>
+                    <Card
+                            style={{
+                            backgroundColor: "#B6D0E2"
+                        }}>
+                            <CardMedia
+                                style={{
+                                width: "100%",
+                                height: "100px"
+                            }}>
+                                <h1
+                                    style={{
+                                    color: "#088F8F",
+                                    fontSize: "2.5vw",
+                                    fontWeight: "bolder",
+                                    textAlign: "center"
+                                }}>RUNNING PROCESSES</h1>
+                            </CardMedia>
+                            <CardContent>
+
+                                <TableContainer
+                                    style={{
+                                    width: '100%'
+                                }}
+                                    component={Paper}>
+                                    <Table>
+                                        <TableHead
+                                            style={{
+                                            backgroundColor: '#088F8F'
+                                        }}>
+                                            <TableRow>
+                                                <TableCell>
+                                                    <b>Command</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>cpu</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>mem</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>rss</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>start</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>stat</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>time</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>tty</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>user</b>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <b>vsz</b>
+                                                </TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {processRows.map((row) => (
+                                                <TableRow key={row.command}>
+
+                                                    <TableCell component="th" scope="row">
+                                                        {row.command}
+                                                    </TableCell>
+                                                    <TableCell component="th" scope="row">
+                                                        {row.cpu}
+                                                    </TableCell>
+                                                    <TableCell align="right">{row.tty}</TableCell>
+                                                    <TableCell align="right">{row.rss}</TableCell>
+                                                    <TableCell align="right">{row.start}</TableCell>
+                                                    <TableCell align="right">{row.stat}</TableCell>
+                                                    <TableCell align="right">{row.time}</TableCell>
+                                                    <TableCell align="right">{row.tty}</TableCell>
+                                                    <TableCell align="right">{row.user}</TableCell>
+                                                    <TableCell align="right">{row.vsz}</TableCell>
                                                 </TableRow>
                                             ))}
                                         </TableBody>

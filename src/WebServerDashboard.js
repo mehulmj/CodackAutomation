@@ -2,6 +2,7 @@ import React from "react";
 import DownloadLink from "react-download-link";
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
+import RefreshIcon from '@material-ui/icons/Refresh';
 import ListAltSharpIcon from '@material-ui/icons/ListAltSharp';
 import IconButton from '@material-ui/core/IconButton';
 import Divider from '@material-ui/core/Divider';
@@ -48,6 +49,7 @@ class WebServerDashboard extends React.Component
             ram: 5,
             result:null,
             open:true,
+            openBackdrop:false,
             homePageHtml:`<!DOCTYPE html><html class="colormode-light"><head><script type="text/javascript" src="https://cdn.cookielaw.org/consent/a7ff9c31-9f59-421f-9a8e-49b11a3eb24e/OtAutoBlock.js"></script><script src="https://cdn.cookielaw.org/consent/a7ff9c31-9f59-421f-9a8e-49b11a3eb24e/otSDKStub.js" type="text/javascript" charSet="UTF-8" data-domain-script="a7ff9c31-9f59-421f-9a8e-49b11a3eb24e"></script><script>
             var timeHolder;
 
@@ -111,22 +113,58 @@ But there was one person who paid attention to his more optimistic experiments, 
 <a href="https://www.washingtonpost.com/archive/lifestyle/1982/07/21/rats-the-real-secret-of-nimh/9d314dfc-e650-4705-822e-a56b954c8a2d/">visited Calhoun’s lab</a>, met the man trying to build a true and creative rodent paradise, and took note of the Frisbee on the door, the scientists’ own attempt “to help when things got too stressful,” as Calhoun put it. Soon after, O’Brien wrote 
 <em>Ms. Frisby and the Rats of NIMH</em>—a story about rats who, having escaped from a lab full of blundering humans, attempt to build their 
 <em>own</em> utopia. Next time, maybe we should put the rats in charge.`,
-            fullScreenHtml:false
+            fullScreenHtml:false,
+            currentTime:" ",
+            list_of_files:[],
+            reqPerSec:" ",
+            bytesPerReq: " ",
+            cpuLoad:" ",
+            serverVersion:"",
+            serverUptime:"",
+            totalAcesses:"",
+            restartTime:""
         };
         this.handleFullScreenClick=this.handleFullScreenClick.bind(this);
         this.homePage=this.homePage.bind(this);
         this.handleFullScreenClose=this.handleFullScreenClose.bind(this);
         this.handleHomePageDownload=this.handleHomePageDownload.bind(this);
+        this.setdata=this.setdata.bind(this);
     }
-
+    componentDidMount()
+    {
+        setTimeout(this.loaddata(),100000);
+    }
     loaddata()
-    {fetch('http://192.168.43.172:5000/').then(response => {
+    {
+    this.setState({openBackdrop:true})
+    fetch('http://192.168.43.172:5000/webserver').then(response => {
         return response.json()
     }).then(users => {
         this.setState({result: users});
+        this.setdata();
     });
-      
     }
+    setdata()
+    {
+        var list_of_files=[];
+        var resultfiles=this.state.result["list_files_html"];
+        for(var i=0;i<resultfiles.length;i++)
+        {
+            list_of_files.push({'file':resultfiles[i]});
+        }
+        console.log();
+        var time=this.state.result["status"]["CurrentTime"];
+        var restartTime=this.state.result["status"]["RestartTime"];
+        var reqPerSec=this.state.result["status"]["ReqPerSec"];
+        var bytesPerReq=this.state.result["status"]["BytesPerSec"]
+        var cpuLoad=this.state.result["status"]["CPULoad"];
+        var serverVersion=this.state.result["status"]["ServerVersion"];
+        var serverUptime=this.state.result["status"]["ServerUptime"];
+        var totalAcesses=this.state.result["status"]["Total Accesses"];
+        var html=this.state.result["home_page_html"]
+        this.setState({homePageHtml:html,restartTime:restartTime,bytesPerReq:bytesPerReq,list_of_files:list_of_files,currentTime:time,reqPerSec:reqPerSec,cpuLoad:cpuLoad,serverUptime:serverUptime,serverVersion:serverVersion,totalAcesses:totalAcesses,openBackdrop:false});
+        
+    }   
     handleFullScreenClick()
     {
         this.setState({fullScreenHtml:true})
@@ -166,6 +204,7 @@ But there was one person who paid attention to his more optimistic experiments, 
                     </AppBar>
                     <Paper>
                     <div>
+                        <br/><br/>
                     <div dangerouslySetInnerHTML={{__html:this.state.homePageHtml}}/>
                     </div>
                     </Paper>
@@ -178,7 +217,7 @@ But there was one person who paid attention to his more optimistic experiments, 
     }
     render()
     {
-        const battery = this.state.battery;
+        const cpuLoad = parseFloat(this.state.cpuLoad);
         const storage = this.state.storage;
         const ram = this.state.ram;
         const rows = [
@@ -187,14 +226,14 @@ But there was one person who paid attention to his more optimistic experiments, 
             this.createData('200.23.233.101', '3:00', 'tty2'),
             this.createData('120.149.33.42', '12:00', 'tty1'),
         ];
-        const list_of_files=[{"file" : 'index.html'},{"file" :'page1.js'},{"file" : 'page2.js'}];
+        const list_of_files=this.state.list_of_files;
         return (
             <div>
                 <br/>
                 <div
                     style
                     ={{
-                    backgroundColor: "#FADA5E",
+                    backgroundColor:"darkgoldenrod",
                 }}>
                     <h1
                         style={{
@@ -202,47 +241,65 @@ But there was one person who paid attention to his more optimistic experiments, 
                         textAlign: "center"
                     }}>
                         {this.props.webserverName.toUpperCase()} {"  "}
-                         Statistics</h1>
+                         STATISTICS</h1>
                     <Divider/>
                 </div>
                 <div style={{
                     height: "20px"
                 }}/>
+                <Backdrop style={{zIndex:"1000"}}open={this.state.openBackdrop}>
+                    <CircularProgress color="inherit" />
+                </Backdrop>
+                <div style={{display:"inline"}}>
+                <h4 style={{color:"rebeccapurple"}}>Version: {this.state.serverVersion}</h4>
+                <IconButton style={{marginLeft:"95%",display:"inline-block"}} onClick={()=>{this.loaddata()}}>
+                    <RefreshIcon/>
+                </IconButton>
+                </div>
                 <Grid container justify="center">
                     <Grid item sm={2}>
-                        <div style={{borderStyle: "solid",height:"10vh"}}>
-                        <h1>Hello</h1>
+                        <div style={{borderStyle: "solid",borderColor:"lightslategray",height:"100%",backgroundColor:"lightgrey"}}>
+                        <h5 style={{paddingLeft:"3vw"}}>CURRENT TIME</h5>
+                        <Divider/>
+                        <h5 style={{paddingLeft:"3vw"}}><b>{this.state.currentTime}</b></h5>
+                        </div>
+                    </Grid>
+                      
+                    <Grid item sm={2}>
+                    <div style={{borderStyle: "solid",borderColor:"lightslategray",height:"100%",backgroundColor:"lightgrey"}}>
+                        <h5 style={{paddingLeft:"2vw"}}>SERVER RESTART TIME</h5>
+                        <Divider/>
+                        <h5 style={{paddingLeft:"3vw"}}><b>{this.state.restartTime}</b></h5>
                         </div>
                     </Grid>
                     <Grid item sm={2}>
-                    <div style={{borderStyle: "solid",height:"10vh"}}>
-
-                        <h1>Hello</h1>
+                    <div style={{borderStyle: "solid",borderColor:"lightslategray",height:"100%",backgroundColor:"lightgrey"}}>
+                        <h5 style={{paddingLeft:"2vw"}}>REQUEST PER SECOND</h5>
+                        <Divider/>
+                        <h5 style={{paddingLeft:"3vw"}}><b>{this.state.reqPerSec}</b></h5>
                         </div>
 
                     </Grid>
                     <Grid item sm={2}>
-                    <div style={{borderStyle: "solid",height:"10vh"}}>
-                        <h1>Hello</h1>
+                        <div style={{borderStyle: "solid",borderColor:"lightslategray",height:"100%",backgroundColor:"lightgrey"}}>
+                        <h5 style={{paddingLeft:"2vw"}}>BYTES PER REQUEST</h5>
+                        <Divider/>
+                        <h5 style={{paddingLeft:"3vw"}}><b>{this.state.bytesPerReq}</b></h5>
                         </div>
-
-                    </Grid>  
-                    <Grid item sm={2}>
-                    <div style={{borderStyle: "solid",height:"10vh"}}>
-                    <h1>Hello</h1>
-                    </div>
-
                     </Grid>
                     <Grid item sm={2}>
-                    <div style={{borderStyle: "solid",height:"10vh"}}>
-                    <h1>Hello</h1>
-                    </div>
-
+                    <div style={{borderStyle: "solid",borderColor:"lightslategray",height:"100%",backgroundColor:"lightgrey"}}>
+                        <h5 style={{paddingLeft:"2vw"}}>SERVER UPTIME</h5>
+                        <Divider/>
+                        <h5 style={{paddingLeft:"3vw"}}><b>{this.state.serverUptime}</b></h5>
+                        </div>
                     </Grid>
                     <Grid item sm={2}>
-                    <div style={{borderStyle: "solid",height:"10vh"}}>
-                    <h1>Hello</h1>
-                    </div>
+                    <div style={{borderStyle: "solid",borderColor:"lightslategray",height:"100%",backgroundColor:"lightgrey"}}>
+                        <h5 style={{paddingLeft:"2vw"}}>TOTAL ACCESSES</h5>
+                        <Divider/>
+                        <h5 style={{paddingLeft:"3vw"}}><b>{this.state.totalAcesses}</b></h5>
+                        </div>
                     </Grid>
                 </Grid>
                 <br/>
@@ -253,7 +310,7 @@ But there was one person who paid attention to his more optimistic experiments, 
                             backgroundColor: "#FFFAFA"
                         }}>
                             <CardMedia
-                                image="battery.gif"
+                                image="ram.gif"
                                 style={{
                                 width: "100%",
                                 height: "100px"
@@ -264,7 +321,7 @@ But there was one person who paid attention to his more optimistic experiments, 
                                         config={{
                                         type: 'doughnut2d',
                                         height: 500,
-                                        width: 800,
+                                        width: 600,
                                         dataFormat: 'json',
                                         bgcolor: "#FDF5E6",
                                         dataSource: {
@@ -273,25 +330,27 @@ But there was one person who paid attention to his more optimistic experiments, 
                                                 "subCaption": "Your OS",
                                                 "defaultCenterLabel": "CPU Utilization",
                                                 "centerLabel": "$label: $value",
-                                                "decimals": "0",
+                                                "decimals": "5",
+                                                "pieRadius":"100",
+                                                "doughnutRadius":"50",
                                                 "theme": "fusion",
                                                 "showborder": "1",
                                                 "showshadow": "1",
                                                 "enablerotation": "1",
                                                 "enablesmartlabel": "1",
-                                                "centerLabelFontSize": "30",
-                                                "labelFontSize": "20",
+                                                "centerLabelFontSize": "10",
+                                                "labelFontSize": "15",
                                                 "captionFontSize": "40",
-                                                "centerLabelBold": "1"
+                                                "centerLabelBold": "1",
                                             },
                                             "data": [
                                                 {
                                                     "label": "CPU Utilization",
-                                                    "value": `${battery}`,
+                                                    "value": `${cpuLoad}`,
                                                     "color": "#3CB371"
                                                 }, {
                                                     "label": "",
-                                                    "value": 100 - `${battery}`,
+                                                    "value": 100 - `${cpuLoad}`,
                                                     "color": "#FA8072"
                                                 }
                                             ]
@@ -302,103 +361,7 @@ But there was one person who paid attention to his more optimistic experiments, 
                         </Card>
                     </Grid>
                     <Grid item sm={6}>
-                        <Card
-                            style={{
-                            backgroundColor: "#FFFAFA"
-                        }}>
-                            <CardMedia
-                                image="storage.png"
-                                style={{
-                                width: "100%",
-                                height: "100px"
-                            }}/>
-                            <CardContent>
-                                <Chart
-                                    config={{
-                                    type: 'doughnut2d',
-                                    width: 800,
-                                    height: 500,
-                                    dataFormat: 'json',
-                                    dataSource: {
-                                        "chart": {
-                                            "caption": "Storage ",
-                                            "subCaption": "Your Storage",
-                                            "defaultCenterLabel": "Storage",
-                                            "centerLabel": "$label: $value",
-                                            "decimals": "0",
-                                            "centerLabelFontSize": "28",
-                                            "centerLabelBold": "1",
-                                            "labelFontSize": "20",
-                                            "captionFontSize": "40",
-                                            "theme": "fusion"
-                                        },
-                                        "data": [
-                                            {
-                                                "label": "Storage",
-                                                "value": `${storage}`
-                                            }, {
-                                                "label": "Remaining",
-                                                "value": 64 - `${storage}`
-                                            }
-                                        ]
-                                    }
-                                }}/>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                </Grid>
-
-                <div style={{
-                    height: "20px"
-                }}/>
-                <Grid container spacing={4}>
-                    <Grid item sm={6}>
-                        <Card
-                            style={{
-                            backgroundColor: "#FFFAFA"
-                        }}>
-                            <CardMedia
-                                image="ram.gif"
-                                style={{
-                                width: "100%",
-                                height: "140px"
-                            }}/>
-                            <CardContent>
-                                <Chart
-                                    config={{
-                                    type: 'doughnut2d',
-                                    width: 800,
-                                    height: 500,
-                                    dataFormat: 'json',
-                                    dataSource: {
-                                        "chart": {
-                                            "caption": "RAM %",
-                                            "subCaption": "Your RAM",
-                                            "defaultCenterLabel": "RAM",
-                                            "centerLabel": "$label: $value",
-                                            "centerLabelFontSize": "30",
-                                            "centerLabelBold": "1",
-                                            "labelFontSize": "20",
-                                            "captionFontSize": "40",
-                                            "decimals": "0",
-                                            "theme": "fusion"
-                                        },
-                                        "data": [
-                                            {
-                                                "label": "RAM",
-                                                "value": `${ram}`
-                                            }, {
-                                                "label": "Remaining",
-                                                "value": 8 - `${ram}`
-                                            }
-                                        ]
-                                    }
-                                }}/>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                    <Grid item sm={6}>
-                        <Card
+                    <Card
                             style={{
                             backgroundColor: "#B6D0E2"
                         }}>
@@ -454,7 +417,18 @@ But there was one person who paid attention to his more optimistic experiments, 
                                 </TableContainer>
                             </CardContent>
                         </Card>
+                                                
                     </Grid>
+                </Grid>
+
+                <div style={{
+                    height: "20px"
+                }}/>
+                <Grid container spacing={4}>
+                    <Grid item sm={6}>
+                    </Grid>
+                    <Grid item sm={6}>
+                      </Grid>
                     <Grid item sm={6}>
                         <Card>
                             <CardMedia
@@ -488,7 +462,7 @@ But there was one person who paid attention to his more optimistic experiments, 
                         </IconButton>
                         {this.homePage()}
                         <Paper>
-                        <div dangerouslySetInnerHTML={{__html:this.state.homePageHtml}}/>
+                            Click on full screen button to view your home page   
                         </Paper>
                         </CardContent>
                         </Card>

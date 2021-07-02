@@ -201,7 +201,7 @@ class Header extends React.Component
                     }}>
                         <Button color="inherit">Operation</Button>
                     </Link>
-                    <div style={{marginLeft:"60vw"}}>
+                    <div style={{marginLeft:"55%"}}>
                 <IconButton
                 aria-label="User"
                 aria-controls="menu-appbar"

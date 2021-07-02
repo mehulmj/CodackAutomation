@@ -49,6 +49,11 @@ import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
 import StopIcon from '@material-ui/icons/Stop';
 import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import CachedIcon from '@material-ui/icons/Cached';
+import Snackbar from '@material-ui/core/Snackbar';
+import MuiAlert from '@material-ui/lab/Alert';
+function Alert(props) {
+    return <MuiAlert elevation={6} variant="filled" {...props}/>;
+}
 class WebServerOperation extends React.Component {
     constructor(props)
     {
@@ -57,34 +62,169 @@ class WebServerOperation extends React.Component {
             openDelete:false,
             openEdit:false,
             portNumber: 80,
+            deleteFileName:"",
             changedPortNumber: null,
-            webServerStatus : false
+            webServerStatus : false,
+            openPortNumberChange:false,
+            snackBarMessage:"",
+            openSnackBar:false,
+            openBackdrop:false,
+            html_files:[],
+            cgi_files:[],
+            alertType:"error",
+            renameFile:"",
+            originalFileName:""
         };
-        this.deleteFile = this
-            .deleteFile
-            .bind(this);
+        this.handleRenameChange=this.handleRenameChange.bind(this);
         this.fileUpload=this.fileUpload.bind(this);
-        this.alertDeleteFile=this.alertDeleteFile.bind(this);
+        this.deleteFile=this.deleteFile.bind(this);
         this.alertEditFile=this.alertEditFile.bind(this);
         this.editFile=this.editFile.bind(this);
         this.handlePortNumberChange=this.handlePortNumberChange.bind(this);
+        this.alertPortNumberChange=this.alertPortNumberChange.bind(this);
+        this.handlePortButton=this.handlePortButton.bind(this);
+        this.handleStopResumeButton=this.handleStopResumeButton.bind(this);
+        this.handleRebootButton=this.handleRebootButton.bind(this);
+        this.get_list_html=this.get_list_html.bind(this);
+        this.get_list_cgi=this.get_list_cgi.bind(this);
+        this.apiRename=this.apiRename.bind(this);
+    }
+    componentDidMount()
+    {
+        this.get_list_html();
+        this.get_list_cgi();
+        this.setState({openBackdrop:true})
+        fetch('http://192.168.43.172:5000/weboperations/check_status').then(response => {
+            return response.json()
+        }).then(users => {
+            this.setState({webServerStatus:users["status"],openBackdrop:false})
+        });
+    }
+    apiRename()
+    {
+        this.setState({openBackdrop:true,openEdit:false})
+        fetch('http://192.168.43.172:5000/weboperations/rename_file_html?file_name='+this.state.originalFileName+'&to_name='+this.state.renameFile).then(response => {
+        return response.json()
+    }).then(users => {
+        var message="Successfully renamed the file"
+        this.setState({snackBarMessage:message,alertType:"success",openBackdrop:false})
+        this.get_list_html();
+    });
+    }
+    handleRebootButton()
+    {
+        this.setState({openBackdrop:true, webServerStatus:false});
+        fetch('http://192.168.43.172:5000/weboperations/reboot_server').then(response => {
+            return response.json()
+        }).then(users => {
+            var message="Successfully rebooted the server"
+            this.setState({snackBarMessage:message,alertType:"success",openBackdrop:false,webServerStatus:true})
+        });
+    }
+    handleStopResumeButton()
+    {
+        this.setState({openBackdrop:true});
+        var status= !this.state.webServerStatus;
+        if(status == false)
+        { 
+            fetch('http://192.168.43.172:5000/weboperations/stop_server').then(response => {
+        return response.json()
+    }).then(users => {
+        var message="Successfully stopped the server"
+        this.setState({snackBarMessage:message,alertType:"success",openBackdrop:false,webServerStatus:false})
+    });
+        }
+        else
+        {
+            fetch('http://192.168.43.172:5000/weboperations/start_server').then(response => {
+                return response.json()
+            }).then(users => {
+                var message="Successfully started the server"
+                this.setState({snackBarMessage:message,alertType:"success",openBackdrop:false,webServerStatus:true})
+            });
+        }
+    }
+    handlePortButton()
+    {
+        if(this.state.changedPortNumber==null)
+        {
+            this.setState({openSnackBar:true, alertType:"error", snackBarMessage:"Please Enter a valid port number"})
+            return(<div></div>);
+        }
+        else if(this.state.portNumber == this.state.changedPortNumber)
+        {
+            this.setState({openSnackBar:true,alertType:"error", snackBarMessage:"Port Number is the same as the current one, choose a different port number"})
+        }
+        else
+        this.setState({openPortNumberChange:true});
+    }
+    alertPortNumberChange()
+    {
+       
+        const handleClose = () => {
+            this.setState({openPortNumberChange:false});
+          };
+         return(
+            <Dialog
+            open={this.state.openPortNumberChange}
+            onClose={handleClose}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description"
+          >
+            <DialogTitle id="alert-dialog-title"><span style={{color:"red"}}>{"Are you sure you want to change the port number?"}</span></DialogTitle>
+            <DialogContent>
+              <DialogContentText id="alert-dialog-description">
+                This would change the port number from {this.state.portNumber} to {this.state.changedPortNumber}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose} color="primary">
+                Disagree
+              </Button>
+              <Button onClick={handleClose} color="primary" autoFocus>
+                Agree
+              </Button>
+            </DialogActions>
+          </Dialog>
+         );
     }
     fileUpload(event)
     {
-        console.log(event)
+        var file= event.target.files[0];
+        const formData=new FormData();
+        formData.append('file',file);
+        fetch('http://192.168.43.172:5000/weboperations/upload_file',{
+            method:"post",
+            body: formData
+        }).then(response => {
+        return response.json()
+    }).then(users => {
+        console.log(users);
+        this.get_list_html();
+    });
     }
     deleteFile(event)
     {
         var fileName = event.target.id || event.target.value;
         console.log(fileName);
-        this.setState({openDelete:true});
+        this.setState({openBackdrop:true})
+        fetch('http://192.168.43.172:5000/weboperations/delete_file_html?file_name='+fileName).then(response => {
+        return response.json()
+    }).then(users => {
+        var message="Successfully delted the file"
+        this.setState({snackBarMessage:message,alertType:"success",openBackdrop:false})
+        this.get_list_html();
+    });
+        
     }
-
     editFile(event)
     {
         var fileName = event.target.id || event.target.value;
-        console.log(fileName);
-        this.setState({openEdit:true});
+        this.setState({openEdit:true,originalFileName:fileName});
+    }
+    handleRenameChange(event)
+    {
+        this.setState({renameFile:event.target.value});
     }
     alertEditFile()
     {
@@ -92,7 +232,7 @@ class WebServerOperation extends React.Component {
           const handleClose = () => {
             this.setState({openEdit:false});
           };
-        
+          
           return (
               <div>
               <Dialog open={this.state.openEdit} onClose={handleClose} aria-labelledby="form-dialog-title">
@@ -107,68 +247,79 @@ class WebServerOperation extends React.Component {
                     id="name"
                     label="Rename"
                     fullWidth
+                    onChange= {this.handleRenameChange}
                   />
                 </DialogContent>
                 <DialogActions>
                   <Button onClick={handleClose} color="primary">
                     Cancel
                   </Button>
-                  <Button onClick={handleClose} color="primary">
+                  <Button onClick={this.apiRename} color="primary">
                     Rename
                   </Button>
                 </DialogActions>
-              </Dialog>
+              </Dialog> 
               </div>);
     }
-    alertDeleteFile()
+    get_list_html()
     {
-        
-          const handleClose = () => {
-            this.setState({openDelete:false});
-          };
-         return(
-            <Dialog
-            open={this.state.openDelete}
-            onClose={handleClose}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title"><span style={{color:"red"}}>{"Are you sure you want to delete this file?"}</span></DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                This action would delete the file permanently and might not be recoverable!
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleClose} color="primary">
-                Disagree
-              </Button>
-              <Button onClick={handleClose} color="primary" autoFocus>
-                Agree
-              </Button>
-            </DialogActions>
-          </Dialog>
-         );
+    this.setState({openBackdrop:true})
+    fetch('http://192.168.43.172:5000/webserver').then(response => {
+        return response.json()
+    }).then(users => {
+        var list_of_files=[];
+        var resultfiles=users["list_files_html"];
+        for(var i=0;i<resultfiles.length;i++)
+        {
+            list_of_files.push({'file':resultfiles[i]});
+        }
+        this.setState({html_files:list_of_files,openBackdrop:false})
+    });
+    }
+    get_list_cgi()
+    {
+    this.setState({openBackdrop:true})
+    fetch('http://192.168.43.172:5000/webserver').then(response => {
+        return response.json()
+    }).then(users => {
+        var list_of_files=[];
+        var resultfiles=users["list_files_cgi"];
+        for(var i=0;i<resultfiles.length;i++)
+        {
+            list_of_files.push({'file':resultfiles[i]});
+        }
+        this.setState({cgi_files:list_of_files,openBackdrop:false})
+    });
     }
     handlePortNumberChange(event)
     {
+        console.log(event);
         this.setState({changedPortNumber: event.target.value});
     }
+    
     render()
     {
-        const list_of_files = [
-            {
-                "file": 'index.html'
-            }, {
-                "file": 'page1.js'
-            }, {
-                "file": 'page2.js'
+        const list_of_files = this.state.html_files
+        const cgi_files=this.state.cgi_files;
+        const handleClose = (event, reason) => {
+            if (reason === 'clickaway') {
+              return;
             }
-        ];
+        
+            this.setState({openSnackBar:false});
+          };
         return (
             <div>
-                {this.alertDeleteFile()}
                 {this.alertEditFile()}
+                {this.alertPortNumberChange()}
+                <div>
+                    <Snackbar open={this.state.openSnackBar} autoHideDuration={4000} onClose={handleClose}>
+                        <Alert onClose={handleClose} severity={this.state.alertType}>
+                            {this.state.snackBarMessage}
+                        </Alert>
+                    </Snackbar>
+                </div>
+               
                 <br/>
                 <br/>
                 <Grid container spacing={1}>
@@ -189,6 +340,9 @@ class WebServerOperation extends React.Component {
                             </CardMedia>
                             <Divider/>
                             <CardContent>
+                            <Backdrop style={{zIndex:"1000"}} open={this.state.openBackdrop}>
+                                <CircularProgress color="blue" />
+                            </Backdrop>
                                 Server is currently : {(this.state.webServerStatus === true &&
                                      <div style={{display:"inline"}}><b style={{color:"green"}}> ACTIVE</b><br/><br/>
                                      <Button
@@ -197,19 +351,35 @@ class WebServerOperation extends React.Component {
                                         height:"6vh",
                                         backgroundColor: "red",
                                         color: "white"
-                                    }}>
+                                    }}
+                                    onClick={this.handleStopResumeButton}>
                                         <h3>
                                             <b>stop</b>
                                         </h3>
                                             <StopIcon/>
-                                    </Button>    </div>) || (this.state.webServerStatus == false && <div style={{display:"inline"}}><b style={{color:"red"}}> INACTIVE</b><br/><br/>
+                                    </Button> 
+                                    {"    "}      
+                                    <Button
+                                        variant="contained"
+                                        style={{
+                                        height:"6vh",
+                                        backgroundColor: "grey",
+                                        color: "white"
+                                    }}
+                                    onClick={this.handleRebootButton}>
+                                        <h3>
+                                            <b>reboot</b>
+                                        </h3>
+                                            <CachedIcon/>
+                                    </Button> </div>) || (this.state.webServerStatus == false && <div style={{display:"inline"}}><b style={{color:"red"}}> INACTIVE</b><br/><br/>
                                      <Button
                                         variant="contained"
                                         style={{
                                         height:"6vh",
                                         backgroundColor: "green",
                                         color: "white"
-                                    }}>
+                                    }}
+                                    onClick={this.handleStopResumeButton}>
                                         <h3>
                                             <b>resume</b>
                                         </h3>
@@ -217,19 +387,7 @@ class WebServerOperation extends React.Component {
                                     </Button>    </div>) 
                                 }
                             <div style={{display:"inline"}}> 
-                                    <Button
-                                        variant="contained"
-                                        style={{
-                                        height:"6vh",
-                                        backgroundColor: "grey",
-                                        color: "white"
-                                    }}>
-                                        <h3>
-                                            <b>reboot</b>
-                                        </h3>
-                                            <CachedIcon/>
-                                    </Button>
-                                    {"    "}
+                                    
                                     <Button
                                         variant="contained"
                                         style={{
@@ -253,7 +411,7 @@ class WebServerOperation extends React.Component {
                                <TextField
                                     id="outlined-basic"
                                     value={this.state.value}
-                                    onChange={this.handlePasswordChange}
+                                    onChange={this.handlePortNumberChange}
                                     label="Port Number"
                                     type="number"
                                     variant="filled"
@@ -266,8 +424,9 @@ class WebServerOperation extends React.Component {
                                         style={{
                                         height:"6vh",
                                         backgroundColor: "#4169E1",
-                                        color: "white"
-                                    }}>
+                                        color: "white",
+                                    }}
+                                        onClick={this.handlePortButton}>
                                         <h3>
                                             <b>Change</b>
                                         </h3>
@@ -334,8 +493,9 @@ class WebServerOperation extends React.Component {
                                                             style={{
                                                             color: "red"
                                                         }}
-                                                            onClick={this.deleteFile}>
-                                                            <DeleteIcon id={row.file} onClick={this.deleteFile}/>
+                                                            onClick={this.deleteFile}
+                                                        >
+                                                            <DeleteIcon  onClick={this.deleteFile} id={row.file} />
                                                         </IconButton>
 
                                                         <IconButton
@@ -417,7 +577,7 @@ class WebServerOperation extends React.Component {
                                             </TableRow>
                                         </TableHead>
                                         <TableBody>
-                                            {list_of_files.map((row) => (
+                                            {cgi_files.map((row) => (
                                                 <TableRow key={row.ip}>
                                                     <TableCell component="th" scope="row">
                                                         <h5
@@ -434,8 +594,8 @@ class WebServerOperation extends React.Component {
                                                             style={{
                                                             color: "red"
                                                         }}
-                                                            onClick={this.deleteFile}>
-                                                            <DeleteIcon id={row.file} onClick={this.deleteFile}/>
+                                                            >
+                                                            <DeleteIcon id={row.file}/>
                                                         </IconButton>
 
                                                         <IconButton

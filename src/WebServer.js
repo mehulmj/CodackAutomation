@@ -136,6 +136,7 @@ class WebServer extends React.Component
                                     <Link
                                         to={{
                                         pathname: "/Operations",
+                                        operationFor:"webserver"
                                     }}
                                         style={{
                                         textDecoration: "None"
